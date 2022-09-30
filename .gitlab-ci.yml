@@ -1,0 +1,57 @@
+stages:
+  - build
+  - deploy
+
+.build: &build
+  stage: build
+  image: docker:latest
+  services:
+    - docker:18.09.7-dind
+  script:
+    - echo $DOCKER_TOKEN | docker login --username $DOCKER_USERNAME --password-stdin
+    - docker build . -t $DOCKER_USERNAME/vietBuilding_api:$TAG
+    - docker push $DOCKER_USERNAME/vietBuilding_api:$TAG
+
+.deploy: &deploy
+  stage: deploy
+  image: linuxserver/openssh-server:amd64-latest
+  before_script:
+    - eval "$(ssh-agent)"
+    - ssh-add <(echo "$PRIVATE_KEY")
+    - mkdir -p ~/.ssh
+    - echo -e "$SSH_CONFIG" > ~/.ssh/config
+
+# DEVELOP ENVIRONMENT
+develop-build:
+  <<: *build
+  variables:
+    TAG: dev
+  #   before_script:
+  #     - echo -e "$DEVELOP_ENV" > .env
+  only:
+    - develop
+
+develop-deploy:
+  <<: *deploy
+  script:
+    - ssh develop "cd ~/app/vietBuilding && ./deploy.sh api && exit"
+  only:
+    - develop
+# PRODUCTION ENVIRONMENT
+# prod-build:
+#   <<: *build
+#   variables:
+#     TAG: latest
+#   before_script:
+#     - echo -e "$PROD_ENV" > .env
+#   only:
+#     - master
+
+# prod-deploy:
+#   <<: *deploy
+#   when: manual
+#   script:
+#     - ssh ifcvn-app1 "sudo service ifcvn-web restart && exit"
+#     - ssh ifcvn-app2 "sudo service ifcvn-web restart && exit"
+#   only:
+#     - master
