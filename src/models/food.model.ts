@@ -18,6 +18,10 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.FLOAT,
         allowNull: false,
       },
+      sold: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
     },
     {
       underscored: true,
@@ -28,9 +32,10 @@ module.exports = function (sequelize, DataTypes) {
     db.Food.belongsTo(db.User, { onDelete: 'CASCADE', hooks: true });
     db.Food.hasMany(db.FoodImage, { onDelete: 'CASCADE', hooks: true });
     db.Food.belongsToMany(db.Category, { through: 'food_category' });
-    db.Food.belongsToMany(db.Order, { through: 'food_order' });
+    db.Food.hasMany(db.Order);
+    db.Food.hasMany(db.Review);
   };
 
-  Food.beforeDestroy((food) => {});
+  Food.afterSave((food) => {});
   return Food;
 };

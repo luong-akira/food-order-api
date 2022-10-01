@@ -10,14 +10,18 @@ module.exports = function (sequelize, DataTypes) {
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
+
     name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
+
     user_name: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
     },
+
     password: {
       allowNull: false,
       type: DataTypes.STRING,
@@ -41,6 +45,8 @@ module.exports = function (sequelize, DataTypes) {
   User.associate = (db) => {
     db.User.hasMany(db.Food, { onDelete: 'CASCADE', hooks: true });
 
+    db.User.hasMany(db.Review);
+
     db.User.hasMany(db.Order);
 
     db.User.hasMany(db.Address);
@@ -54,7 +60,9 @@ module.exports = function (sequelize, DataTypes) {
     }
 
     if (user.changed('profile_picture')) {
-      fs.unlinkSync(path.join(process.cwd(), user._previousDataValues.profile_picture));
+      if (user._previousDataValues.profile_picture) {
+        fs.unlinkSync(path.join(process.cwd(), user._previousDataValues.profile_picture));
+      }
     }
   });
 

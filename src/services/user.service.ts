@@ -22,6 +22,8 @@ import {
   UserUpdateParams,
 } from '@controllers/models/UserRequestModel';
 import Joi = require('joi');
+import * as fs from 'fs';
+import * as path from 'path';
 
 export async function register(registerUser: UserRegisterParams) {
   let user = await User.findOne({
@@ -30,11 +32,18 @@ export async function register(registerUser: UserRegisterParams) {
     },
   });
 
-  if (user) throw new AppError({ code: 404, message: 'Username has existed' });
+  if (user) {
+    if (registerUser.profile_picture) {
+      fs.unlinkSync(path.join(process.cwd(), registerUser.profile_picture));
+    }
+
+    throw new AppError({ code: 404, message: 'Username has existed' });
+  }
 
   console.log(registerUser);
 
   if (BasicRegisterUserSchema.validate(registerUser).error) {
+    console.log(BasicRegisterUserSchema.validate(registerUser));
     throw new Joi.ValidationError(
       'Validation Error',
       BasicRegisterUserSchema.validate(registerUser).error.details,
@@ -43,7 +52,16 @@ export async function register(registerUser: UserRegisterParams) {
   }
 
   const result = await sequelize.transaction(async (t) => {
-    user = await User.create(registerUser, { transaction: t });
+    user = await User.create(
+      {
+        name: registerUser.name,
+        user_name: registerUser.user_name,
+        password: registerUser.password,
+        role: registerUser.role,
+        profile_picture: registerUser.profile_picture,
+      },
+      { transaction: t },
+    );
     return user;
   });
 
@@ -66,6 +84,8 @@ export async function login(loginUserParams: UserLoginParams) {
       user_name: loginUserParams.user_name,
     },
   });
+
+  console.log(user);
 
   if (!user) throw new Error('Invalid credentials');
 
@@ -91,7 +111,13 @@ export async function update(id: string, updateUserParams: UserUpdateParams) {
     },
   });
 
-  if (!user) throw new Error('User is not found');
+  if (!user) {
+    if (updateUserParams.profile_picture) {
+      fs.unlinkSync(path.join(process.cwd(), updateUserParams.profile_picture));
+    }
+
+    throw new Error('User is not found');
+  }
 
   user.name = updateUserParams.name || user.name;
   user.user_name = updateUserParams.user_name || user.user_name;

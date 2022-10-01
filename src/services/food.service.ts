@@ -1,12 +1,13 @@
 const db = require('@models');
 const { sequelize, Sequelize, User, Food, FoodImage } = db.default;
-import { FoodsController } from '@controllers/food.controller';
+import { FoodsController } from '@controllers/foods.controller';
 import {
   CreateFoodParams,
   CreateFoodSchema,
   UpdateFoodParams,
   UpdateFoodSchema,
 } from '@controllers/models/FoodRequestModel';
+import { OrdersController } from '@controllers/orders.controller';
 import Joi = require('joi');
 
 export async function createFood(createFoodParams: CreateFoodParams, userId: string, foodImages?: string[]) {
@@ -107,4 +108,26 @@ export async function deleteFood(id: number, UserId: string) {
   });
 
   return 'Delete succesffuly';
+}
+
+export async function getFoodsByUser(UserId: string, limit, page) {
+  const foodCount = await Food.count({
+    where: {
+      UserId,
+    },
+  });
+
+  const totalPage = Math.ceil(foodCount / limit);
+
+  const foods = await Food.findAll({
+    where: {
+      UserId,
+    },
+    include: [FoodImage],
+    order: [['created_at', 'DESC']],
+    limit,
+    offset: (page - 1) * limit,
+  });
+
+  return { data: foods, limit, totalPage, page };
 }

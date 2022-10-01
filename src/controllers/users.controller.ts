@@ -51,8 +51,13 @@ export class UsersController extends ApplicationController {
       registerUser.role = request.body.role;
     }
 
+    console.log(request.file);
+
     if (request.file) {
-      registerUser.profile_picture = `/${request.file.destination.replace('\\', '/')}/${request.file.filename}`;
+      const destination = request.file.destination.replace('\\', '/');
+      const filename = request.file.filename;
+      const filePath = `/${destination}/${filename}`;
+      registerUser.profile_picture = filePath;
     }
 
     console.log(registerUser);

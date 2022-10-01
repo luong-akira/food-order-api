@@ -1,5 +1,5 @@
 import { IS_ACTIVE, apiCode, AppError, PRODUCT_MEDIA_TYPE } from '@commons/constant';
-import { ApplicationController } from './';
+import { ApplicationController } from '.';
 import { handlePagingMiddleware } from '@middleware/pagingMiddleware';
 import Joi from '../helpers/validationHelper';
 import * as uploadMiddleware from '@middleware/uploadMiddleware';
@@ -87,6 +87,9 @@ export class FoodsController extends ApplicationController {
     return await foodService.deleteFood(foodId, userId);
   }
 
-  @Get()
-  public async getFoods() {}
+  @Get('/users/{userId}')
+  public async getFoodsByUser(@Path() userId: string, @Request() request: any) {
+    const { limit, page } = handlePagingMiddleware(request);
+    return foodService.getFoodsByUser(userId, limit, page);
+  }
 }
