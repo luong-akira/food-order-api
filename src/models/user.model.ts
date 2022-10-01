@@ -1,5 +1,7 @@
 import { createJWToken } from '@config/auth';
 import * as bcrypt from 'bcryptjs';
+import * as fs from 'fs';
+import * as path from 'path';
 
 module.exports = function (sequelize, DataTypes) {
   const User = sequelize.define('User', {
@@ -37,7 +39,7 @@ module.exports = function (sequelize, DataTypes) {
   });
 
   User.associate = (db) => {
-    db.User.hasMany(db.Food);
+    db.User.hasMany(db.Food, { onDelete: 'CASCADE', hooks: true });
 
     db.User.hasMany(db.Order);
 
@@ -50,6 +52,15 @@ module.exports = function (sequelize, DataTypes) {
       user.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync(10), null);
       //console.log('before SAVE:11111   ', { user });
     }
+
+    if (user.changed('profile_picture')) {
+      fs.unlinkSync(path.join(process.cwd(), user._previousDataValues.profile_picture));
+    }
+  });
+
+  User.beforeDestroy((user) => {
+    // console.log(path.join(process.cwd(), user.dataValues.profile_picture));
+    fs.unlinkSync(path.join(process.cwd(), user.dataValues.profile_picture));
   });
 
   User.prototype.generateToken = function generateToken() {

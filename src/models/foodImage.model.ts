@@ -2,10 +2,6 @@ module.exports = function (sequelize, DataTypes) {
   const FoodImage = sequelize.define(
     'FoodImage',
     {
-      desc: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
       image: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -17,7 +13,11 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   FoodImage.associate = (db) => {
-    db.FoodImage.belongsTo(db.Food);
+    db.FoodImage.belongsTo(db.Food, { onDelete: 'CASCADE', hooks: true });
   };
+
+  FoodImage.afterDestroy((foodImage) => {
+    console.log('Destroy');
+  });
   return FoodImage;
 };

@@ -31,7 +31,7 @@ module.exports = function (sequelize, DataTypes) {
 
   Order.associate = (db) => {
     db.Order.belongsTo(db.User);
-    db.Order.belongsToMany(db.Food, { through: 'food_category' });
+    db.Order.belongsToMany(db.Food, { through: 'food_order' });
   };
   return Order;
 };

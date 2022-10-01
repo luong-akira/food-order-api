@@ -4,14 +4,19 @@ import { handlePagingMiddleware } from '@middleware/pagingMiddleware';
 import Joi from '../helpers/validationHelper';
 import * as uploadMiddleware from '@middleware/uploadMiddleware';
 
-import { Body, Request, Get, Post, Put, Query, Route, Delete, Tags, Security, Patch } from 'tsoa';
+import { Body, Request, Get, Post, Put, Query, Route, Delete, Tags, Security, Patch, Path } from 'tsoa';
 import {
   SuccessResponseModel,
   withSuccess,
   // withPagingSuccess,
 } from './models/BaseResponseModel';
 import * as express from 'express';
-import { UserWithPasswordModel, UserLoginParams, UserRegisterParams } from './models/UserRequestModel';
+import {
+  UserWithPasswordModel,
+  UserLoginParams,
+  UserRegisterParams,
+  UserUpdateParams,
+} from './models/UserRequestModel';
 // import { AuthorizedUser, MulterRequest } from '@commons/types';
 import * as userService from '@services/user.service';
 
@@ -47,8 +52,10 @@ export class UsersController extends ApplicationController {
     }
 
     if (request.file) {
-      registerUser.profile_picture = request.file.path;
+      registerUser.profile_picture = `/${request.file.destination.replace('\\', '/')}/${request.file.filename}`;
     }
+
+    console.log(registerUser);
 
     return await userService.register(registerUser);
   }
@@ -61,6 +68,35 @@ export class UsersController extends ApplicationController {
     };
 
     return await userService.login(userLoginParams);
+  }
+
+  @Put('/update')
+  @Security('jwt')
+  public async update(@Request() request: any) {
+    await uploadMiddleware.handleSingleFile(request, 'profile_picture', PRODUCT_MEDIA_TYPE.IMAGE);
+
+    const updateUser: UserUpdateParams = {
+      name: request.body.name,
+      user_name: request.body.user_name,
+    };
+
+    const userId = request.user.data.id;
+
+    if (request.body.role) {
+      updateUser.role = request.body.role;
+    }
+
+    if (request.file) {
+      updateUser.profile_picture = `/${request.file.destination.replace('\\', '/')}/${request.file.filename}`;
+    }
+
+    return await userService.update(userId, updateUser);
+  }
+
+  @Delete('/{userId}')
+  @Security('jwt', ['admin'])
+  public async deleteUser(@Path() userId: string) {
+    return await userService.deleteUser(userId);
   }
 
   @Get('/allUsers')

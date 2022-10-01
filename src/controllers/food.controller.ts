@@ -4,14 +4,14 @@ import { handlePagingMiddleware } from '@middleware/pagingMiddleware';
 import Joi from '../helpers/validationHelper';
 import * as uploadMiddleware from '@middleware/uploadMiddleware';
 
-import { Body, Request, Get, Post, Put, Query, Route, Delete, Tags, Security, Patch } from 'tsoa';
+import { Body, Request, Get, Post, Put, Query, Route, Delete, Tags, Security, Path } from 'tsoa';
 import {
   SuccessResponseModel,
   withSuccess,
   // withPagingSuccess,
 } from './models/BaseResponseModel';
 import * as express from 'express';
-import { CreateFoodParams } from './models/FoodRequestModel';
+import { CreateFoodParams, UpdateFoodParams } from './models/FoodRequestModel';
 import * as foodService from '@services/food.service';
 
 const db = require('@models');
@@ -19,25 +19,74 @@ const { sequelize, Sequelize, User } = db.default;
 
 @Route('foods')
 @Tags('food')
-export class UsersController extends ApplicationController {
+export class FoodsController extends ApplicationController {
   constructor() {
     super('Food');
   }
 
   @Post()
-  public async createFood(@Body() createFoodParams: CreateFoodParams) {
-    return foodService.createFood(createFoodParams);
+  @Security('jwt')
+  public async createFood(@Request() request: any) {
+    await uploadMiddleware.handleFiles(request, 'food_image', PRODUCT_MEDIA_TYPE.IMAGE);
+
+    console.log(request.files);
+
+    let food: CreateFoodParams = {
+      name: request.body.name,
+      desc: request.body.name,
+      stock: request.body.stock,
+      price: request.body.price,
+    };
+
+    console.log(food);
+
+    let userId = request.user.data.id;
+    let foodImages: string[] = [];
+
+    if (request.files) {
+      foodImages = request.files.map((file) => `/${file.destination.replace('\\', '/')}/${file.filename}`);
+    }
+
+    return foodService.createFood(food, userId, foodImages);
+  }
+
+  @Get('{foodId}')
+  public async getFood(@Path() foodId: number) {
+    console.log(`Food id is ${foodId}`);
+    return foodService.getFood(foodId);
   }
 
   @Put('{foodId}')
-  public async updateFood() {}
+  @Security('jwt')
+  public async updateFood(@Request() request: any, @Path() foodId: number) {
+    await uploadMiddleware.handleFiles(request, 'food_image', PRODUCT_MEDIA_TYPE.IMAGE);
+
+    let food: UpdateFoodParams = {
+      name: request.body.name,
+      desc: request.body.desc,
+      stock: request.body.stock,
+      price: request.body.price,
+    };
+
+    console.log(food);
+
+    let userId = request.user.data.id;
+    let foodImages: string[] = [];
+
+    if (request.files) {
+      foodImages = request.files.map((file) => file.path);
+    }
+
+    return foodService.updateFood(foodId, food, userId, foodImages);
+  }
 
   @Delete('{foodId}')
-  public async deleteFood() {}
+  @Security('jwt')
+  public async deleteFood(@Path() foodId: number, @Request() request: any) {
+    let userId = request.user.data.id;
+    return await foodService.deleteFood(foodId, userId);
+  }
 
   @Get()
   public async getFoods() {}
-
-  @Get('{foodId}')
-  public async getFood() {}
 }

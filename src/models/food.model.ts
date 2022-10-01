@@ -25,10 +25,12 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   Food.associate = (db) => {
-    db.Food.belongsTo(db.User);
-    db.Food.hasMany(db.FoodImage);
-    db.Food.hasMany(db.Category);
-    db.Food.belongsToMany(db.Order, { through: 'food_category' });
+    db.Food.belongsTo(db.User, { onDelete: 'CASCADE', hooks: true });
+    db.Food.hasMany(db.FoodImage, { onDelete: 'CASCADE', hooks: true });
+    db.Food.belongsToMany(db.Category, { through: 'food_category' });
+    db.Food.belongsToMany(db.Order, { through: 'food_order' });
   };
+
+  Food.beforeDestroy((food) => {});
   return Food;
 };

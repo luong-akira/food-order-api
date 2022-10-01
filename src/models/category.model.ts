@@ -13,7 +13,7 @@ module.exports = function (sequelize, DataTypes) {
   );
 
   Category.associate = (db) => {
-    db.Category.belongsTo(db.Food);
+    db.Category.belongsToMany(db.Food, { through: 'food_category' });
   };
   return Category;
 };

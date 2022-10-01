@@ -20,3 +20,10 @@ export const CreateFoodSchema = Joi.object({
   stock: Joi.number().required(),
   price: Joi.number().required(),
 });
+
+export const UpdateFoodSchema = Joi.object({
+  name: Joi.string().optional().min(3),
+  desc: Joi.string().optional().min(3),
+  stock: Joi.number().optional(),
+  price: Joi.number().optional(),
+});

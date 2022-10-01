@@ -38,7 +38,7 @@ sequelize
 
 // sequelize
 //   // thêm mới mà k xóa
-//   .sync({ force: false, alter: true, logging: console.log })
+//   .sync({ force: false, alter: true, logging: console.log });
 //   // xóa hết rồi thêm lại
 //   // .sync({ force: true })
 //   .then((res) => {

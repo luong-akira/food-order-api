@@ -16,8 +16,10 @@ import { HostNotFoundError } from 'sequelize/types';
 import {
   BasicLoginUserSchema,
   BasicRegisterUserSchema,
+  BasicUpdateUserSchema,
   UserLoginParams,
   UserRegisterParams,
+  UserUpdateParams,
 } from '@controllers/models/UserRequestModel';
 import Joi = require('joi');
 
@@ -72,6 +74,54 @@ export async function login(loginUserParams: UserLoginParams) {
   const { password, ...data } = user.dataValues;
 
   return { ...data, token: user.generateToken() };
+}
+
+export async function update(id: string, updateUserParams: UserUpdateParams) {
+  if (BasicUpdateUserSchema.validate(updateUserParams).error) {
+    throw new Joi.ValidationError(
+      'Validation Error',
+      BasicUpdateUserSchema.validate(updateUserParams).error.details,
+      null,
+    );
+  }
+
+  const user: any = await User.findOne({
+    where: {
+      id,
+    },
+  });
+
+  if (!user) throw new Error('User is not found');
+
+  user.name = updateUserParams.name || user.name;
+  user.user_name = updateUserParams.user_name || user.user_name;
+  user.role = updateUserParams.role || user.role;
+  user.profile_picture = updateUserParams.profile_picture || user.profile_picture;
+
+  await user.save();
+
+  return user;
+}
+
+export async function deleteUser(id: string) {
+  const user = await User.findOne({
+    where: {
+      id,
+      role: 'user',
+    },
+  });
+
+  if (!user) throw new Error('User not found');
+
+  await User.destroy({
+    where: {
+      id,
+      role: 'user',
+    },
+    individualHooks: true,
+  });
+
+  return { user_id: id };
 }
 
 export async function getAllUsers(page: number, limit: number) {
