@@ -11,14 +11,10 @@ import {
   // withPagingSuccess,
 } from './models/BaseResponseModel';
 import * as express from 'express';
-import {
-  UserWithPasswordModel,
-  UserLoginParams,
-  UserRegisterParams,
-  UserUpdateParams,
-} from './models/UserRequestModel';
-// import { AuthorizedUser, MulterRequest } from '@commons/types';
+
+
 import * as orderService from '@services/order.service';
+import { OrderFoodRequest } from './models/OrderRequestModel';
 
 @Route('orders')
 @Tags('order')
@@ -27,15 +23,20 @@ export class OrdersController extends ApplicationController {
     super('Order');
   }
 
-  @Post('{foodId}')
+  @Post()
   @Security('jwt')
-  public async createOrder(@Request() request: any, @Path() foodId: number) {
+  public async createOrder(@Request() request: any) {
     const userId = request.user.data.id;
-    const quantity = request.body.quantity;
-    return await orderService.createOrder(foodId, userId, quantity);
+    const addressId = request.body.addressId;
+    if(!addressId) throw new Error("Please choose an address")
+    const foods = request.body.foods;
+    return orderService.createOrder(foods, userId,addressId);
   }
 
-  @Delete('/orders/{orderId}')
+  @Delete('/{orderDetailsId}')
   @Security('jwt')
-  public async abortOrder(@Path() orderId: number) {}
+  public async abortOrder(@Path() orderDetailsId: string,@Request() request: any) {
+    const userId = request.user.data.id;
+    return orderService.abortOrder(orderDetailsId,userId)
+  }
 }

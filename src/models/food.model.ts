@@ -14,6 +14,10 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      rating:{
+        type:DataTypes.INTEGER,
+        defaultValue:0
+      },
       price: {
         type: DataTypes.FLOAT,
         allowNull: false,
@@ -32,7 +36,7 @@ module.exports = function (sequelize, DataTypes) {
     db.Food.belongsTo(db.User, { onDelete: 'CASCADE', hooks: true });
     db.Food.hasMany(db.FoodImage, { onDelete: 'CASCADE', hooks: true });
     db.Food.belongsToMany(db.Category, { through: 'food_category' });
-    db.Food.hasMany(db.Order);
+    db.Food.belongsToMany(db.Order, { through:db.OrderDetails});
     db.Food.hasMany(db.Review);
   };
 

@@ -8,20 +8,6 @@ module.exports = function (sequelize, DataTypes) {
         primaryKey: true,
       },
 
-      quantity: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-
-      isDelivered: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-      },
-
-      totalPrice: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-      },
     },
     {
       underscored: true,
@@ -30,8 +16,8 @@ module.exports = function (sequelize, DataTypes) {
 
   Order.associate = (db) => {
     db.Order.belongsTo(db.User);
-    db.Order.belongsTo(db.Food);
     db.Order.belongsTo(db.Address);
+    db.Order.belongsToMany(db.Food,{through:db.OrderDetails});
   };
   return Order;
 };
