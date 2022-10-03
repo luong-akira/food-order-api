@@ -6,22 +6,39 @@ module.exports = function (sequelize, DataTypes) {
         type: DataTypes.STRING,
         allowNull: false,
       },
+
       desc: {
         type: DataTypes.STRING,
         allowNull: false,
       },
+
       stock: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      rating:{
-        type:DataTypes.INTEGER,
-        defaultValue:0
+
+      totalRating: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
       },
+
+      numOfRating: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+
+      avgRating: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return this.totalRating / this.numOfRating;
+        },
+      },
+
       price: {
         type: DataTypes.FLOAT,
         allowNull: false,
       },
+
       sold: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
@@ -36,7 +53,7 @@ module.exports = function (sequelize, DataTypes) {
     db.Food.belongsTo(db.User, { onDelete: 'CASCADE', hooks: true });
     db.Food.hasMany(db.FoodImage, { onDelete: 'CASCADE', hooks: true });
     db.Food.belongsToMany(db.Category, { through: 'food_category' });
-    db.Food.belongsToMany(db.Order, { through:db.OrderDetails});
+    db.Food.belongsToMany(db.Order, { through: db.OrderDetails });
     db.Food.hasMany(db.Review);
   };
 

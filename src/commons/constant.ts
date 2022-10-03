@@ -115,8 +115,8 @@ export const FILTER_TYPE = {
 
 export const ROLE = {
   ADMIN: 1,
-  ENTERPRISE: 2,
-  AGENT: 3,
+  SUBADMIN: 2,
+  SUPPLIER: 3,
   USER: 4,
 };
 

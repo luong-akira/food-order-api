@@ -1,5 +1,4 @@
 import Joi = require('joi');
-// import { IS_ACTIVE, apiCode} from '@commons/constant';
 
 export interface UserRequestModel {
   user_name: string;

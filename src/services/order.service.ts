@@ -1,7 +1,5 @@
-import { AppError, IS_ACTIVE } from '@commons/constant';
-
 const db = require('@models');
-const { sequelize, Sequelize, User, Order, Food ,OrderDetails} = db.default;
+const { sequelize, Sequelize, User, Order, Food, OrderDetails } = db.default;
 const { Op } = Sequelize;
 import {
   SuccessResponseModel,
@@ -22,67 +20,72 @@ import {
   UserUpdateParams,
 } from '@controllers/models/UserRequestModel';
 import Joi = require('joi');
-import * as fs from 'fs';
-import * as path from 'path';
+
 import { OrderFoodRequest } from '@controllers/models/OrderRequestModel';
 
-export async function createOrder(foods: OrderFoodRequest[], userId: string,addressId:string) {
-  if(foods.length < 1) throw new Error("Don't have any orders")
+export async function createOrder(foods: OrderFoodRequest[], userId: string, addressId: string) {
+  if (foods.length < 1) throw new Error("Don't have any orders");
 
-  const order :any = await Order.create({
+  const order: any = await Order.create({
     UserId: userId,
-    AddressId:addressId
+    AddressId: addressId,
   });
 
   foods.forEach((food) => {
-    (async()=>{
+    (async () => {
       const existFood = await Food.findOne({
-        where:{
-          id:food.foodId,
-          UserId:{
-            [Op.ne]:userId
-          }
-        }
+        where: {
+          id: food.foodId,
+          UserId: {
+            [Op.ne]: userId,
+          },
+        },
       });
-  
+
       if (!existFood) throw new Error('Food does not exist');
-      if (food.quantity > existFood.stock || food.quantity < 1) throw new Error('quanity exceed stock or quanity is less than 1'); 
-    
-      const orderDetails = await OrderDetails.create({
-        FoodId:food.foodId,
-        OrderId:order.id,
-        quantity:food.quantity,
-        price:food.quantity *existFood.price
-      })
+      if (food.quantity > existFood.stock || food.quantity < 1)
+        throw new Error('quanity exceed stock or quanity is less than 1');
+
+      console.log({
+        FoodId: food.foodId,
+        OrderId: order.id,
+        quantity: food.quantity,
+        total: food.quantity * existFood.price,
+      });
+
+      await OrderDetails.create({
+        FoodId: food.foodId,
+        OrderId: order.id,
+        quantity: food.quantity,
+        total: food.quantity * existFood.price,
+      });
     })();
-  })
+  });
 
   return order;
 }
 
+export async function abortOrder(orderDetailsId: string, UserId: string) {
+  const orderDetails: any = await OrderDetails.findOne({
+    where: {
+      id: orderDetailsId,
+    },
+  });
 
-export async function abortOrder(orderDetailsId:string,UserId:string){
-  const orderDetails :any= await OrderDetails.findOne({
-    where:{
-      id:orderDetailsId
-    }
-  })
-
-  if(!orderDetails) throw new Error("Order details is not found")
+  if (!orderDetails) throw new Error('Order details is not found');
 
   const order = await Order.findOne({
-    where:{
-      id:orderDetails.OrderId,
-      UserId
-    }
-  })
+    where: {
+      id: orderDetails.OrderId,
+      UserId,
+    },
+  });
 
-  if(!order) throw new Error("Order is not found");
+  if (!order) throw new Error('Order is not found');
 
-  if(orderDetails.isDelivered) throw new Error("Order is being delivered");
+  if (orderDetails.isDelivered) throw new Error('Order is being delivered');
 
   await orderDetails.destroy();
 
-  return {id:orderDetails.id}
-
+  return { id: orderDetails.id };
 }

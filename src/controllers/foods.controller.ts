@@ -18,14 +18,14 @@ const db = require('@models');
 const { sequelize, Sequelize, User } = db.default;
 
 @Route('foods')
-@Tags('food')
+@Tags('foods')
 export class FoodsController extends ApplicationController {
   constructor() {
     super('Food');
   }
 
   @Post()
-  @Security('jwt')
+  @Security('jwt', ['supplier'])
   public async createFood(@Request() request: any) {
     await uploadMiddleware.handleFiles(request, 'food_image', PRODUCT_MEDIA_TYPE.IMAGE);
 
@@ -57,7 +57,7 @@ export class FoodsController extends ApplicationController {
   }
 
   @Put('{foodId}')
-  @Security('jwt')
+  @Security('jwt', ['supplier'])
   public async updateFood(@Request() request: any, @Path() foodId: number) {
     await uploadMiddleware.handleFiles(request, 'food_image', PRODUCT_MEDIA_TYPE.IMAGE);
 
@@ -81,7 +81,7 @@ export class FoodsController extends ApplicationController {
   }
 
   @Delete('{foodId}')
-  @Security('jwt')
+  @Security('jwt', ['supplier'])
   public async deleteFood(@Path() foodId: number, @Request() request: any) {
     let userId = request.user.data.id;
     return await foodService.deleteFood(foodId, userId);

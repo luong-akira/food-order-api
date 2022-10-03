@@ -7,7 +7,6 @@ module.exports = function (sequelize, DataTypes) {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-
     },
     {
       underscored: true,
@@ -17,7 +16,8 @@ module.exports = function (sequelize, DataTypes) {
   Order.associate = (db) => {
     db.Order.belongsTo(db.User);
     db.Order.belongsTo(db.Address);
-    db.Order.belongsToMany(db.Food,{through:db.OrderDetails});
+    db.Order.belongsToMany(db.Food, { through: db.OrderDetails });
   };
+
   return Order;
 };

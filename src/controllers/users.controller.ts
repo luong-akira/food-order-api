@@ -31,7 +31,7 @@ import axios from 'axios';
 // }
 
 @Route('users')
-@Tags('user')
+@Tags('users')
 export class UsersController extends ApplicationController {
   constructor() {
     super('User');
@@ -66,12 +66,7 @@ export class UsersController extends ApplicationController {
   }
 
   @Post('/login')
-  public async login(@Request() request: express.Request) {
-    let userLoginParams: UserLoginParams = {
-      user_name: request.body.user_name,
-      password: request.body.password,
-    };
-
+  public async login(@Body() userLoginParams: UserLoginParams) {
     return await userService.login(userLoginParams);
   }
 

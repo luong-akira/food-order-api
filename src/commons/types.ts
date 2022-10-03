@@ -1,18 +1,14 @@
 import { Request, Response } from 'express-serve-static-core';
 export interface AuthorizedUser {
-  phone: string;
-  id: number;
-  enterprise_id?: number | null;
-  df_type_user_id?: number;
-  role?: number;
-  name?: string;
+  id: string;
+  role: string;
 }
 
 export interface FollowWhere {
   is_active: number;
   user_id?: number;
   product_id?: number;
-  enterprise_id?: number
+  enterprise_id?: number;
 }
 
 export interface RequestType extends Request {

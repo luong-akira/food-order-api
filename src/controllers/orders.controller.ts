@@ -12,31 +12,30 @@ import {
 } from './models/BaseResponseModel';
 import * as express from 'express';
 
-
 import * as orderService from '@services/order.service';
 import { OrderFoodRequest } from './models/OrderRequestModel';
 
 @Route('orders')
-@Tags('order')
+@Tags('orders')
 export class OrdersController extends ApplicationController {
   constructor() {
     super('Order');
   }
 
   @Post()
-  @Security('jwt')
+  @Security('jwt', ['user'])
   public async createOrder(@Request() request: any) {
     const userId = request.user.data.id;
     const addressId = request.body.addressId;
-    if(!addressId) throw new Error("Please choose an address")
+    if (!addressId) throw new Error('Please choose an address');
     const foods = request.body.foods;
-    return orderService.createOrder(foods, userId,addressId);
+    return orderService.createOrder(foods, userId, addressId);
   }
 
   @Delete('/{orderDetailsId}')
-  @Security('jwt')
-  public async abortOrder(@Path() orderDetailsId: string,@Request() request: any) {
+  @Security('jwt', ['user'])
+  public async abortOrder(@Path() orderDetailsId: string, @Request() request: any) {
     const userId = request.user.data.id;
-    return orderService.abortOrder(orderDetailsId,userId)
+    return orderService.abortOrder(orderDetailsId, userId);
   }
 }

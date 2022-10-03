@@ -27,35 +27,7 @@
             }
           }
         }
-      ],
-      "paths": {
-        "/users/register": {
-          "post": {
-            "consumes": ["multipart/form-data"],
-            "parameters": [
-              {
-                "in": "formData",
-                "name": "profile_picture",
-                "required": false,
-                "type": "file"
-              }
-            ]
-          }
-        },
-        "/files/uploadImage": {
-          "post": {
-            "consumes": ["multipart/form-data"],
-            "parameters": [
-              {
-                "in": "formData",
-                "name": "image",
-                "required": true,
-                "type": "file"
-              }
-            ]
-          }
-        }
-      }
+      ]
     }
   },
   "routes": {

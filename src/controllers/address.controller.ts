@@ -32,7 +32,7 @@ import { CreateAddressParams, UpdateAddressParams } from './models/AddressReques
 // }
 
 @Route('addresses')
-@Tags('address')
+@Tags('addresses')
 export class AddressesController extends ApplicationController {
   constructor() {
     super('Address');
