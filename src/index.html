@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Client</title>
+
+  </head>
+  <body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+      
+      socket.on("order",(payload)=>{
+        console.log(payload);
+      })
+    </script>
+  </body>
+</html>

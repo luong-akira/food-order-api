@@ -22,6 +22,22 @@ export class OrdersController extends ApplicationController {
     super('Order');
   }
 
+  @Get('myOrders')
+  @Security('jwt', ['user'])
+  public async getMyOrders(@Request() request: any) {
+    const userId = request.user.data.id;
+    const { limit, page } = handlePagingMiddleware(request);
+    return orderService.getMyOrders(userId, limit, page);
+  }
+
+  @Get('orderList')
+  @Security('jwt', ['supplier'])
+  public async getOrderList(@Request() request: any) {
+    const userId = request.user.data.id;
+    const { limit, page } = handlePagingMiddleware(request);
+    return orderService.getOrderList(userId, limit, page);
+  }
+
   @Post()
   @Security('jwt', ['user'])
   public async createOrder(@Request() request: any) {
@@ -30,6 +46,13 @@ export class OrdersController extends ApplicationController {
     if (!addressId) throw new Error('Please choose an address');
     const foods = request.body.foods;
     return orderService.createOrder(foods, userId, addressId);
+  }
+
+  @Put('/{orderDetailsId}')
+  @Security('jwt', ['supplier'])
+  public async setIsDelivered(@Path() orderDetailsId: string, @Request() request: any) {
+    const userId = request.user.data.id;
+    return orderService.setIsDelivered(orderDetailsId, userId);
   }
 
   @Delete('/{orderDetailsId}')

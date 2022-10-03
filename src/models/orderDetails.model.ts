@@ -33,17 +33,6 @@ module.exports = function (sequelize, DataTypes) {
     },
   );
 
-  OrderDetails.afterSave(async (orderDetails, options) => {
-    const { transaction } = options;
-
-    if (orderDetails.isDelivered && orderDetails.isPaid) {
-      await sequelize.models.Food.increment('sold', {
-        where: { id: orderDetails.FoodId },
-        transaction,
-      });
-    }
-  });
-
   OrderDetails.afterUpdate(async (orderDetails, options) => {
     const { transaction } = options;
 

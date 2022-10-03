@@ -4,7 +4,7 @@ import { handlePagingMiddleware } from '@middleware/pagingMiddleware';
 import Joi from '../helpers/validationHelper';
 import * as uploadMiddleware from '@middleware/uploadMiddleware';
 
-import { Body, Request, Get, Post, Put, Query, Route, Delete, Tags, Security, Path } from 'tsoa';
+import { Body, Request, Get, Post, Put, Query, Route, Delete, Tags, Security, Path, FormField } from 'tsoa';
 import {
   SuccessResponseModel,
   withSuccess,
@@ -29,16 +29,12 @@ export class FoodsController extends ApplicationController {
   public async createFood(@Request() request: any) {
     await uploadMiddleware.handleFiles(request, 'food_image', PRODUCT_MEDIA_TYPE.IMAGE);
 
-    console.log(request.files);
-
     let food: CreateFoodParams = {
       name: request.body.name,
-      desc: request.body.name,
+      desc: request.body.desc,
       stock: request.body.stock,
       price: request.body.price,
     };
-
-    console.log(food);
 
     let userId = request.user.data.id;
     let foodImages: string[] = [];
@@ -51,9 +47,10 @@ export class FoodsController extends ApplicationController {
   }
 
   @Get('{foodId}')
-  public async getFood(@Path() foodId: number) {
+  public async getFood(@Path() foodId: number, @Request() request: any) {
     console.log(`Food id is ${foodId}`);
-    return foodService.getFood(foodId);
+    const { limit, page } = handlePagingMiddleware(request);
+    return foodService.getFood(foodId, limit, page);
   }
 
   @Put('{foodId}')

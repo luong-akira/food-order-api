@@ -12,7 +12,7 @@ export interface FollowWhere {
 }
 
 export interface RequestType extends Request {
-  user?: { data: AuthorizedUser };
+  user: { data: AuthorizedUser };
   enterprise_id?: number;
   getBaseServer(): string;
   getFullUrl(baseUrl?: string): string;

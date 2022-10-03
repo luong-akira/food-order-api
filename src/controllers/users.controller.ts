@@ -24,12 +24,6 @@ const db = require('@models');
 const { sequelize, Sequelize, User } = db.default;
 const { Op } = Sequelize;
 
-import axios from 'axios';
-
-// interface MulterRequest extends express.Request {
-//   file: any;
-// }
-
 @Route('users')
 @Tags('users')
 export class UsersController extends ApplicationController {

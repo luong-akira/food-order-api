@@ -1,5 +1,5 @@
 const db = require('@models');
-const { sequelize, Sequelize, User, Food, FoodImage } = db.default;
+const { sequelize, Sequelize, User, Food, FoodImage, Review } = db.default;
 import { FoodsController } from '@controllers/foods.controller';
 import {
   CreateFoodParams,
@@ -37,12 +37,21 @@ export async function createFood(createFoodParams: CreateFoodParams, userId: str
   return { message: 'Food create successfully' };
 }
 
-export async function getFood(id: number) {
+export async function getFood(id: number, limit: number, page: number) {
   const food = await Food.findOne({
     where: {
       id,
     },
-    include: [FoodImage],
+    include: [
+      {
+        model: FoodImage,
+      },
+      {
+        model: Review,
+        limit,
+        offset: (page - 1) * limit,
+      },
+    ],
   });
 
   if (!food) throw new Error('Food does not found');

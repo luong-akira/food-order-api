@@ -33,33 +33,16 @@
     "baseUrl": "src",
     "outDir": "dist",
     "paths": {
-      "@config/*": [
-        "config/*"
-      ],
-      "@controllers/*": [
-        "controllers/*"
-      ],
-      "@models": [
-        "models/index"
-      ],
-      "@routes/*": [
-        "routes/*"
-      ],
-      "@services/*": [
-        "services/*"
-      ],
-      "@utils/*": [
-        "utils/*"
-      ],
-      "@commons/*": [
-        "commons/*"
-      ],
-      "@middleware/*": [
-        "middleware/*"
-      ],
-      "@helpers/*": [
-        "helpers/*"
-      ]
+      "@config/*": ["config/*"],
+      "@controllers/*": ["controllers/*"],
+      "@models": ["models/index"],
+      "@routes/*": ["routes/*"],
+      "@services/*": ["services/*"],
+      "@utils/*": ["utils/*"],
+      "@commons/*": ["commons/*"],
+      "@middleware/*": ["middleware/*"],
+      "@helpers/*": ["helpers/*"],
+      "@socket/*": ["socket/*"]
     }
   },
   "include": [
@@ -68,10 +51,6 @@
     "src/models/df_status_order.model.ts",
     "src/helpers/uploadThread.js"
   ],
-  "files": [
-    "./src/index.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "files": ["./src/index.d.ts"],
+  "exclude": ["node_modules"]
 }
