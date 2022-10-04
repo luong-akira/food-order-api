@@ -7,6 +7,11 @@ module.exports = function (sequelize, DataTypes) {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
+
+      total: {
+        type: DataTypes.BIGINT,
+        defaultValue: 0,
+      },
     },
     {
       underscored: true,

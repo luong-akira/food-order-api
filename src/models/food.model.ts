@@ -30,6 +30,10 @@ module.exports = function (sequelize, DataTypes) {
       avgRating: {
         type: DataTypes.VIRTUAL,
         get() {
+          if (this.numOfRating == 0) {
+            return 0;
+          }
+
           return this.totalRating / this.numOfRating;
         },
       },

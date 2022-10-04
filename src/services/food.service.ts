@@ -10,6 +10,22 @@ import {
 import { OrdersController } from '@controllers/orders.controller';
 import Joi = require('joi');
 
+export async function getMyFoods(userId: string, limit: number, page: number) {
+  const foodCount = await Food.count({ where: { UserId: userId } });
+
+  const totalPage = Math.ceil(foodCount / limit);
+
+  const foods = await Food.findAll({
+    where: {
+      UserId: userId,
+    },
+    limit,
+    offset: (page - 1) * limit,
+  });
+
+  return { data: foods, limit, page, totalPage };
+}
+
 export async function createFood(createFoodParams: CreateFoodParams, userId: string, foodImages?: string[]) {
   if (CreateFoodSchema.validate(createFoodParams).error) {
     throw new Joi.ValidationError('Validation Error', CreateFoodSchema.validate(createFoodParams).error.details, null);

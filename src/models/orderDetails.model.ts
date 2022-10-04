@@ -33,6 +33,17 @@ module.exports = function (sequelize, DataTypes) {
     },
   );
 
+  OrderDetails.afterCreate(async (orderDetails, options) => {
+    const { transaction } = options;
+
+    const orderId = await sequelize.models.Order.findOne({
+      where: { id: orderDetails.OrderIs },
+    });
+
+    orderId.total += orderDetails.total;
+    await orderId.save();
+  });
+
   OrderDetails.afterUpdate(async (orderDetails, options) => {
     const { transaction } = options;
 

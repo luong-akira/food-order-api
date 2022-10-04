@@ -24,6 +24,14 @@ export class FoodsController extends ApplicationController {
     super('Food');
   }
 
+  @Get()
+  @Security('jwt', ['supplier'])
+  public async getMyFoods(@Request() request: any) {
+    const userId = request.user.data.id;
+    const { limit, page } = handlePagingMiddleware(request);
+    return foodService.getMyFoods(userId, limit, page);
+  }
+
   @Post()
   @Security('jwt', ['supplier'])
   public async createFood(@Request() request: any) {
