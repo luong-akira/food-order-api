@@ -20,9 +20,17 @@ import {
   UserUpdateParams,
 } from '@controllers/models/UserRequestModel';
 import Joi = require('joi');
+const querystring = require('qs');
+const crypto = require('crypto');     
+const config = require('../config/payment');
+const dateFormat = require('dateformat');
+var ip = require("ip");
+
+
 
 import { OrderFoodRequest } from '@controllers/models/OrderRequestModel';
 import { orderQueue } from '../queues/order/order.queue';
+import { VNPAY } from '@commons/constant';
 
 export async function getMyOrders(userId: string, limit: number, page: number) {
   const myOrders: any = await Order.findAll({
@@ -70,6 +78,25 @@ export async function getOrderList(userId: string, limit: number, page: number) 
 
 export async function createOrder(foods: OrderFoodRequest[], userId: string, addressId: string) {
   if (foods.length < 1) throw new Error("Don't have any orders");
+
+
+  foods.forEach((food) => {
+    (async () => {
+      const existFood = await Food.findOne({
+        where: {
+          id: food.foodId,
+          UserId: {
+            [Op.ne]: userId,
+          },
+        },
+      });
+
+      if (!existFood) throw new Error('Food does not exist');
+      if (food.quantity > existFood.stock || food.quantity < 1) {
+        throw new Error('quanity exceed stock or quanity is less than 1');
+      }
+    })();
+  });
 
   const order: any = await Order.create({
     UserId: userId,
@@ -122,7 +149,7 @@ export async function abortOrder(orderDetailsId: string, UserId: string) {
 
   if (!order) throw new Error('Order is not found');
 
-  if (orderDetails.isDelivered) throw new Error('Order is being delivered');
+  if (orderDetails.isDelivered || orderDetails.isPay) throw new Error('Order is being delivered or you have paid');
 
   await orderDetails.destroy();
 
@@ -152,4 +179,96 @@ export async function setIsDelivered(orderDetailsId: string, userId: string) {
   await orderDetails.save();
 
   return { message: `Order : ${orderDetailsId} is delivering` };
+}
+
+
+function sortObject(obj) {
+	let sorted = {};
+	let str = [];
+	let key;
+	for (key in obj){
+		if (obj.hasOwnProperty(key)) {
+		str.push(encodeURIComponent(key));
+		}
+	}
+	str.sort();
+    for (key = 0; key < str.length; key++) {
+        sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
+    }
+    return sorted;
+}
+
+export function createPaymentUrl(req:any){
+  let tmnCode = VNPAY.VNP_TMNCODE;
+  let secretKey = VNPAY.VNP_HASHSECRET
+  let vnpUrl = VNPAY.VNP_URL;
+  let returnUrl = VNPAY.VNP_RETURN_URL;
+
+  let date = new Date();
+
+  let createDate = dateFormat(date, 'yyyymmddHHmmss');
+  let orderId = req.body.orderId;
+  let amount = req.body.amount;
+  let bankCode = req.body.bankCode;
+
+  let orderInfo = req.body.orderDescription;
+  let orderType = req.body.orderType;
+  let locale = req.body.language;
+  if(locale === null || locale === ''){
+    locale = 'vn';
+  }
+  let currCode = 'VND';
+  let vnp_Params = {};
+  vnp_Params['vnp_Version'] = '2.1.0';
+  vnp_Params['vnp_Command'] = 'pay';
+  vnp_Params['vnp_TmnCode'] = tmnCode;
+  // vnp_Params['vnp_Merchant'] = ''
+  vnp_Params['vnp_Locale'] = locale;
+  vnp_Params['vnp_CurrCode'] = currCode;
+  vnp_Params['vnp_TxnRef'] = orderId;
+  vnp_Params['vnp_OrderInfo'] = orderInfo;
+  vnp_Params['vnp_OrderType'] = orderType;
+  vnp_Params['vnp_Amount'] = amount * 100;
+  vnp_Params['vnp_ReturnUrl'] = returnUrl;
+  vnp_Params['vnp_IpAddr'] = ip.address();
+  vnp_Params['vnp_CreateDate'] = createDate;
+  // if(bankCode !== null && bankCode !== ''){
+  //   vnp_Params['vnp_BankCode'] = bankCode;
+  // }
+
+  vnp_Params = sortObject(vnp_Params);
+
+  let signData = querystring.stringify(vnp_Params, { encode: false });
+  let hmac = crypto.createHmac("sha512", secretKey);
+  let signed = hmac.update(new Buffer(signData, 'utf-8')).digest("hex"); 
+  vnp_Params['vnp_SecureHash'] = signed;
+  vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
+  return vnpUrl;
+}
+
+
+export function vnpayReturn(req:any){
+  var vnp_Params = req.query;
+
+  var secureHash = vnp_Params['vnp_SecureHash'];
+
+  delete vnp_Params['vnp_SecureHash'];
+  delete vnp_Params['vnp_SecureHashType'];
+
+  vnp_Params = sortObject(vnp_Params);
+
+  let tmnCode = VNPAY.VNP_TMNCODE;
+  let secretKey = VNPAY.VNP_HASHSECRET
+
+
+  var signData = querystring.stringify(vnp_Params, { encode: false });
+  var crypto = require("crypto");     
+  var hmac = crypto.createHmac("sha512", secretKey);
+  var signed = hmac.update(new Buffer(signData, 'utf-8')).digest("hex");     
+
+  if(secureHash === signed){
+      return {code:vnp_Params['vnp_ResponseCode'] };
+  } else{
+     return {code: '97'}
+  }
 }

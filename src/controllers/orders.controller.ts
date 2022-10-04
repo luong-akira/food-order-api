@@ -4,7 +4,7 @@ import { handlePagingMiddleware } from '@middleware/pagingMiddleware';
 import Joi from '../helpers/validationHelper';
 import * as uploadMiddleware from '@middleware/uploadMiddleware';
 
-import { Body, Request, Get, Post, Put, Query, Route, Delete, Tags, Security, Patch, Path } from 'tsoa';
+import { Body, Request, Get, Post, Put, Query, Route, Delete, Tags, Security, Patch, Path, Res, Response } from 'tsoa';
 import {
   SuccessResponseModel,
   withSuccess,
@@ -36,6 +36,23 @@ export class OrdersController extends ApplicationController {
     const userId = request.user.data.id;
     const { limit, page } = handlePagingMiddleware(request);
     return orderService.getOrderList(userId, limit, page);
+  }
+
+  @Get("vnpay_return")
+  public vnpayReturn(@Request() req:any){
+    console.log("inside vnpay return");
+
+    let value = orderService.vnpayReturn(req)
+    
+    console.log(value)
+  }
+
+  @Post('createPaymentUrl')
+  @Security('jwt',['user'])
+  public createPaymentUrl(@Request() req:any){
+    console.log("inside create payment url")
+    let vpnUrl = orderService.createPaymentUrl(req);
+    return vpnUrl;
   }
 
   @Post()

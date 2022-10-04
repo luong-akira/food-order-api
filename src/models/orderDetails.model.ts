@@ -15,7 +15,7 @@ module.exports = function (sequelize, DataTypes) {
 
       total: {
         type: DataTypes.FLOAT,
-        allowNull: false,
+        defaultValue:0,
       },
 
       isDelivered: {
@@ -35,14 +35,36 @@ module.exports = function (sequelize, DataTypes) {
 
   OrderDetails.afterCreate(async (orderDetails, options) => {
     const { transaction } = options;
-
-    const orderId = await sequelize.models.Order.findOne({
-      where: { id: orderDetails.OrderIs },
+    const orderId:any = await sequelize.models.Order.findOne({
+      where: { id: orderDetails.OrderId },
     });
 
     orderId.total += orderDetails.total;
+
+    const food :any = await sequelize.models.Food.findOne({
+      where:{
+        id:orderDetails.FoodId
+      }
+    })
+
+    food.stock -= orderDetails.quantity;
+    await food.save();
+
     await orderId.save();
   });
+
+  OrderDetails.beforeDestroy(async(orderDetails,options)=>{
+    const food :any = await sequelize.models.Food.findOne({
+      where:{
+        id:orderDetails.FoodId
+      }
+    })
+
+    food.stock += orderDetails.quantity;
+    await food.save();
+
+    
+  })
 
   OrderDetails.afterUpdate(async (orderDetails, options) => {
     const { transaction } = options;

@@ -4,5 +4,5 @@ export const orderQueue = new Bull('order-queue');
 const orderProcess = require('./order.processor');
 
 export async function orderProcesses() {
-  orderQueue.process('order', 5, orderProcess);
+  orderQueue.process('order', orderProcess);
 }
