@@ -36,14 +36,14 @@ export class UsersController extends ApplicationController {
     await uploadMiddleware.handleSingleFile(request, 'profile_picture', PRODUCT_MEDIA_TYPE.IMAGE);
 
     const registerUser: UserRegisterParams = {
+      email: request.body.email,
       name: request.body.name,
-      user_name: request.body.user_name,
       password: request.body.password,
     };
 
-    if (request.body.role) {
-      registerUser.role = request.body.role;
-    }
+    if (request.body.role) registerUser.role = request.body.role;
+
+    if (request.body.phone) registerUser.phone = request.body.phone;
 
     console.log(request.file);
 
@@ -71,14 +71,14 @@ export class UsersController extends ApplicationController {
 
     const updateUser: UserUpdateParams = {
       name: request.body.name,
-      user_name: request.body.user_name,
+      email: request.body.email,
     };
 
     const userId = request.user.data.id;
 
-    if (request.body.role) {
-      updateUser.role = request.body.role;
-    }
+    if (request.body.role) updateUser.role = request.body.role;
+
+    if (request.body.phone) updateUser.phone = request.body.phone;
 
     if (request.file) {
       updateUser.profile_picture = `/${request.file.destination.replace('\\', '/')}/${request.file.filename}`;

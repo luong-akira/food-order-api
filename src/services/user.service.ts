@@ -28,7 +28,7 @@ import * as path from 'path';
 export async function register(registerUser: UserRegisterParams) {
   let user = await User.findOne({
     where: {
-      user_name: registerUser.user_name,
+      email: registerUser.email,
     },
   });
 
@@ -55,10 +55,11 @@ export async function register(registerUser: UserRegisterParams) {
     user = await User.create(
       {
         name: registerUser.name,
-        user_name: registerUser.user_name,
+        email: registerUser.email,
         password: registerUser.password,
         role: registerUser.role,
         profile_picture: registerUser.profile_picture,
+        phone: registerUser.phone,
       },
       { transaction: t },
     );
@@ -81,7 +82,7 @@ export async function login(loginUserParams: UserLoginParams) {
 
   const user = await User.findOne({
     where: {
-      user_name: loginUserParams.user_name,
+      email: loginUserParams.email,
     },
   });
 
@@ -120,9 +121,10 @@ export async function update(id: string, updateUserParams: UserUpdateParams) {
   }
 
   user.name = updateUserParams.name || user.name;
-  user.user_name = updateUserParams.user_name || user.user_name;
+  user.email = updateUserParams.email || user.email;
   user.role = updateUserParams.role || user.role;
   user.profile_picture = updateUserParams.profile_picture || user.profile_picture;
+  user.phone = updateUserParams.phone || user.phone;
 
   await user.save();
 

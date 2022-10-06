@@ -21,12 +21,9 @@ import {
 } from '@controllers/models/UserRequestModel';
 import Joi = require('joi');
 const querystring = require('qs');
-const crypto = require('crypto');     
-const config = require('../config/payment');
+const crypto = require('crypto');
 const dateFormat = require('dateformat');
-var ip = require("ip");
-
-
+const ip = require('ip');
 
 import { OrderFoodRequest } from '@controllers/models/OrderRequestModel';
 import { orderQueue } from '../queues/order/order.queue';
@@ -78,7 +75,6 @@ export async function getOrderList(userId: string, limit: number, page: number) 
 
 export async function createOrder(foods: OrderFoodRequest[], userId: string, addressId: string) {
   if (foods.length < 1) throw new Error("Don't have any orders");
-
 
   foods.forEach((food) => {
     (async () => {
@@ -181,73 +177,79 @@ export async function setIsDelivered(orderDetailsId: string, userId: string) {
   return { message: `Order : ${orderDetailsId} is delivering` };
 }
 
-
 function sortObject(obj) {
-	let sorted = {};
-	let str = [];
-	let key;
-	for (key in obj){
-		if (obj.hasOwnProperty(key)) {
-		str.push(encodeURIComponent(key));
-		}
-	}
-	str.sort();
-    for (key = 0; key < str.length; key++) {
-        sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
+  let sorted = {};
+  let str = [];
+  let key;
+  for (key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      str.push(encodeURIComponent(key));
     }
-    return sorted;
+  }
+  str.sort();
+  for (key = 0; key < str.length; key++) {
+    sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, '+');
+  }
+  return sorted;
 }
 
-export function createPaymentUrl(req:any){
-  let tmnCode = VNPAY.VNP_TMNCODE;
-  let secretKey = VNPAY.VNP_HASHSECRET
+export async function createPaymentUrl(req: any, userId: string, orderDetailsId: string) {
+  const orderDetails: any = await OrderDetails.findOne({
+    where: {
+      id: orderDetailsId,
+      isPaid: false,
+    },
+  });
+
+  if (!orderDetails) throw new Error('Orderdetails is not exist');
+
+  const food: any = await Food.findOne({
+    where: {
+      id: orderDetails.FoodId,
+    },
+    include: [User],
+  });
+
+  if (!food) throw new Error('Food is not exist');
+  console.log(food);
+
   let vnpUrl = VNPAY.VNP_URL;
   let returnUrl = VNPAY.VNP_RETURN_URL;
 
   let date = new Date();
 
   let createDate = dateFormat(date, 'yyyymmddHHmmss');
-  let orderId = req.body.orderId;
-  let amount = req.body.amount;
-  let bankCode = req.body.bankCode;
+  let amount = orderDetails.total;
 
   let orderInfo = req.body.orderDescription;
   let orderType = req.body.orderType;
-  let locale = req.body.language;
-  if(locale === null || locale === ''){
-    locale = 'vn';
-  }
+  let locale = 'vn';
   let currCode = 'VND';
   let vnp_Params = {};
   vnp_Params['vnp_Version'] = '2.1.0';
   vnp_Params['vnp_Command'] = 'pay';
-  vnp_Params['vnp_TmnCode'] = tmnCode;
-  // vnp_Params['vnp_Merchant'] = ''
+  vnp_Params['vnp_TmnCode'] = food.User.vnp_tmncode;
   vnp_Params['vnp_Locale'] = locale;
   vnp_Params['vnp_CurrCode'] = currCode;
-  vnp_Params['vnp_TxnRef'] = orderId;
+  vnp_Params['vnp_TxnRef'] = orderDetailsId;
   vnp_Params['vnp_OrderInfo'] = orderInfo;
   vnp_Params['vnp_OrderType'] = orderType;
   vnp_Params['vnp_Amount'] = amount * 100;
   vnp_Params['vnp_ReturnUrl'] = returnUrl;
   vnp_Params['vnp_IpAddr'] = ip.address();
   vnp_Params['vnp_CreateDate'] = createDate;
-  // if(bankCode !== null && bankCode !== ''){
-  //   vnp_Params['vnp_BankCode'] = bankCode;
-  // }
 
   vnp_Params = sortObject(vnp_Params);
 
   let signData = querystring.stringify(vnp_Params, { encode: false });
-  let hmac = crypto.createHmac("sha512", secretKey);
-  let signed = hmac.update(new Buffer(signData, 'utf-8')).digest("hex"); 
+  let hmac = crypto.createHmac('sha512', food.User.vnp_hashsecret);
+  let signed = hmac.update(new Buffer(signData, 'utf-8')).digest('hex');
   vnp_Params['vnp_SecureHash'] = signed;
   vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
   return vnpUrl;
 }
 
-
-export function vnpayReturn(req:any){
+export function vnpayReturn(req: any) {
   var vnp_Params = req.query;
 
   var secureHash = vnp_Params['vnp_SecureHash'];
@@ -258,17 +260,16 @@ export function vnpayReturn(req:any){
   vnp_Params = sortObject(vnp_Params);
 
   let tmnCode = VNPAY.VNP_TMNCODE;
-  let secretKey = VNPAY.VNP_HASHSECRET
-
+  let secretKey = VNPAY.VNP_HASHSECRET;
 
   var signData = querystring.stringify(vnp_Params, { encode: false });
-  var crypto = require("crypto");     
-  var hmac = crypto.createHmac("sha512", secretKey);
-  var signed = hmac.update(new Buffer(signData, 'utf-8')).digest("hex");     
+  var crypto = require('crypto');
+  var hmac = crypto.createHmac('sha512', secretKey);
+  var signed = hmac.update(new Buffer(signData, 'utf-8')).digest('hex');
 
-  if(secureHash === signed){
-      return {code:vnp_Params['vnp_ResponseCode'] };
-  } else{
-     return {code: '97'}
+  if (secureHash === signed) {
+    return { code: vnp_Params['vnp_ResponseCode'], orderId: vnp_Params['vnp_TxnRef'] };
+  } else {
+    return { code: '97' };
   }
 }

@@ -4,11 +4,11 @@ export const IS_ACTIVE = {
 };
 
 export const VNPAY = {
-  VNP_TMNCODE:"OVJF7IB7",
-  VNP_HASHSECRET:"UICHUFPUSSNBNKINIEABDNUZALDSPWBQ",
-  VNP_URL:"https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
-  VNP_RETURN_URL: "http://localhost:5000/api/v1/orders/vnpay_return"
-}
+  VNP_TMNCODE: 'OVJF7IB7',
+  VNP_HASHSECRET: 'UICHUFPUSSNBNKINIEABDNUZALDSPWBQ',
+  VNP_URL: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+  VNP_RETURN_URL: `http://localhost:5000/api/v1/orders/vnpay_return`,
+};
 
 export const GIFT_STATUS = {
   ACTIVE: 1, // hoạt động

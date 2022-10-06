@@ -14,6 +14,8 @@ import * as express from 'express';
 
 import * as orderService from '@services/order.service';
 import { OrderFoodRequest } from './models/OrderRequestModel';
+const db = require('@models');
+const { sequelize, Sequelize, User, Order, Food, OrderDetails } = db.default;
 
 @Route('orders')
 @Tags('orders')
@@ -38,21 +40,30 @@ export class OrdersController extends ApplicationController {
     return orderService.getOrderList(userId, limit, page);
   }
 
-  @Get("vnpay_return")
-  public vnpayReturn(@Request() req:any){
-    console.log("inside vnpay return");
+  @Get('vnpay_return')
+  public async vnpayReturn(@Request() req: any) {
+    console.log('inside vnpay return');
 
-    let value = orderService.vnpayReturn(req)
-    
-    console.log(value)
+    let value = orderService.vnpayReturn(req);
+
+    if (value.code == '00') {
+      const orderDetails = await OrderDetails.findOne({
+        where: {
+          id: value.orderId,
+        },
+      });
+
+      orderDetails.isPaid = true;
+
+      orderDetails.save();
+    }
   }
 
-  @Post('createPaymentUrl')
-  @Security('jwt',['user'])
-  public createPaymentUrl(@Request() req:any){
-    console.log("inside create payment url")
-    let vpnUrl = orderService.createPaymentUrl(req);
-    return vpnUrl;
+  @Post('create_paymentUrl/{orderDetailsId}')
+  @Security('jwt', ['user'])
+  public async createPaymentUrl(@Request() req: any, @Path() orderDetailsId: string) {
+    const userId = req.user.data.id;
+    return orderService.createPaymentUrl(req, userId, orderDetailsId);
   }
 
   @Post()

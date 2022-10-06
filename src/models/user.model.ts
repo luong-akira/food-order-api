@@ -16,7 +16,7 @@ module.exports = function (sequelize, DataTypes) {
       allowNull: false,
     },
 
-    user_name: {
+    email: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
@@ -31,7 +31,19 @@ module.exports = function (sequelize, DataTypes) {
       },
     },
 
+    phone: {
+      type: DataTypes.BIGINT,
+    },
+
     profile_picture: {
+      type: DataTypes.STRING,
+    },
+
+    vnp_tmncode: {
+      type: DataTypes.STRING,
+    },
+
+    vnp_hashsecret: {
       type: DataTypes.STRING,
     },
 
