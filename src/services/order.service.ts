@@ -193,7 +193,7 @@ function sortObject(obj) {
   return sorted;
 }
 
-export async function createPaymentUrl(req: any, userId: string, orderDetailsId: string) {
+export async function createVnpayPaymentUrl(req: any, userId: string, orderDetailsId: string) {
   const orderDetails: any = await OrderDetails.findOne({
     where: {
       id: orderDetailsId,
@@ -249,7 +249,67 @@ export async function createPaymentUrl(req: any, userId: string, orderDetailsId:
   return vnpUrl;
 }
 
-export function vnpayReturn(req: any) {
+export async function createMomoPaymentUrl(req: any, userId: string, orderDetailsId: string) {
+  var partnerCode = "MOMO";
+  var accessKey = "F8BBA842ECF85";
+  var secretkey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
+  var requestId = partnerCode + new Date().getTime();
+  var orderId = orderDetailsId;
+  var orderInfo = "pay with MoMo";
+  var redirectUrl = "https://momo.vn/return";
+  var ipnUrl = "https://callback.url/notify";
+  // var ipnUrl = redirectUrl = "https://webhook.site/454e7b77-f177-4ece-8236-ddf1c26ba7f8";
+  var amount = "50000";
+  var requestType = "captureWallet"
+  var extraData = ""; //pass empty value if your merchant does not have stores
+  
+  //before sign HMAC SHA256 with format
+  //accessKey=$accessKey&amount=$amount&extraData=$extraData&ipnUrl=$ipnUrl&orderId=$orderId&orderInfo=$orderInfo&partnerCode=$partnerCode&redirectUrl=$redirectUrl&requestId=$requestId&requestType=$requestType
+  var rawSignature = "accessKey="+accessKey+"&amount=" + amount+"&extraData=" + extraData+"&ipnUrl=" + ipnUrl+"&orderId=" + orderId+"&orderInfo=" + orderInfo+"&partnerCode=" + partnerCode +"&redirectUrl=" + redirectUrl+"&requestId=" + requestId+"&requestType=" + requestType
+  //puts raw signature
+  console.log(rawSignature);
+
+  var signature = crypto.createHmac('sha256', secretkey)
+    .update(rawSignature)
+    .digest('hex');
+
+    //json object send to MoMo endpoint
+  const requestBody = JSON.stringify({
+    partnerCode : partnerCode,
+    accessKey : accessKey,
+    requestId : requestId,
+    amount : amount,
+    orderId : orderId,
+    orderInfo : orderInfo,
+    redirectUrl : redirectUrl,
+    ipnUrl : ipnUrl,
+    extraData : extraData,
+    requestType : requestType,
+    signature : signature,
+    lang: 'en'
+  });
+
+  console.log(Buffer.byteLength(requestBody))
+
+const https = require('https');
+const options = {
+    hostname: 'test-payment.momo.vn',
+    port: 443,
+    path: '/v2/gateway/api/create',
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(requestBody)
+    }
+}
+
+
+}
+
+export async function vnpayReturn(req: any,userId:string) {
+  const user :any = await User.findOne({where:{id:userId}})
+  if(!user) throw new Error("user does not exist");
+
   var vnp_Params = req.query;
 
   var secureHash = vnp_Params['vnp_SecureHash'];
@@ -259,8 +319,8 @@ export function vnpayReturn(req: any) {
 
   vnp_Params = sortObject(vnp_Params);
 
-  let tmnCode = VNPAY.VNP_TMNCODE;
-  let secretKey = VNPAY.VNP_HASHSECRET;
+  let tmnCode = user.vnp_tmncode;
+  let secretKey = user.vnp_hashsecret;
 
   var signData = querystring.stringify(vnp_Params, { encode: false });
   var crypto = require('crypto');

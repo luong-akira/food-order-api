@@ -41,10 +41,11 @@ export class OrdersController extends ApplicationController {
   }
 
   @Get('vnpay_return')
+  @Security('jwt',['user'])
   public async vnpayReturn(@Request() req: any) {
     console.log('inside vnpay return');
-
-    let value = orderService.vnpayReturn(req);
+    const userId = req.user.data.id;
+    let value = await orderService.vnpayReturn(req,userId);
 
     if (value.code == '00') {
       const orderDetails = await OrderDetails.findOne({
@@ -59,11 +60,18 @@ export class OrdersController extends ApplicationController {
     }
   }
 
-  @Post('create_paymentUrl/{orderDetailsId}')
+  @Post('create_vnp_paymentUrl/{orderDetailsId}')
   @Security('jwt', ['user'])
-  public async createPaymentUrl(@Request() req: any, @Path() orderDetailsId: string) {
+  public async createVnpayPaymentUrl(@Request() req: any, @Path() orderDetailsId: string) {
     const userId = req.user.data.id;
-    return orderService.createPaymentUrl(req, userId, orderDetailsId);
+    return orderService.createVnpayPaymentUrl(req, userId, orderDetailsId);
+  }
+
+  @Post("create_momo_paymentUrl/{orderDetailsId}")
+  @Security("jwt",["user"])
+  public async createMomoPaymentUrl(@Request() req: any, @Path() orderDetailsId: string){
+    const userId = req.user.data.id;
+    return orderService.createMomoPaymentUrl(req, userId, orderDetailsId);
   }
 
   @Post()
